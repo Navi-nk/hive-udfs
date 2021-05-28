@@ -12,7 +12,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspe
 
 import static com.data.navi.Util.throwError;
 
-public class StructReduce extends GenericUDF {
+public class StructListReduce extends GenericUDF {
     private ListObjectInspector listOI;
     private StructObjectInspector structOI;
     private String key;
