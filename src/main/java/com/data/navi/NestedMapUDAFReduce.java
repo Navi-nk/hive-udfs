@@ -23,24 +23,11 @@ public class NestedMapUDAFReduce extends UDAF {
             result = new HashMap<>();
         }
 
-        public boolean iterate(Map<String, Integer> inner, Integer key) throws HiveException {
+        public boolean iterate(Map<Integer, Map<String , Integer>> row) throws HiveException {
             if(result == null)
                 throwError("Result map not initialized");
 
-            Map<String, Integer> innerMap = result.getOrDefault(key, new HashMap<>());
-
-            for(Map.Entry<String,Integer> e : inner.entrySet()) {
-                innerMap.compute(e.getKey(), (k, v) -> {
-                    if (v == null)
-                        return e.getValue();
-                    else {
-                        return e.getValue() < v ? e.getValue() : v;
-                    }
-                });
-            }
-
-            result.put(key, innerMap);
-            return true;
+            return merge(row);
         }
 
         public Map<Integer, Map<String , Integer>> terminatePartial() {
