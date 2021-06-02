@@ -1,5 +1,6 @@
 package com.data.navi;
 
+import com.google.common.collect.Maps;
 import org.apache.hadoop.hive.ql.exec.UDAF;
 import org.apache.hadoop.hive.ql.exec.UDAFEvaluator;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -34,7 +35,24 @@ public class NestedMapUDAFReduce extends UDAF {
             return result;
         }
 
-        public boolean merge(Map<Integer, Map<String , Integer>> other) {
+        public boolean merge(Map<Integer, Map<String , Integer>> other) throws HiveException {
+            if (other == null) {
+                return true;
+            }
+            for(Map.Entry<Integer, Map<String , Integer>> entry : other.entrySet()) {
+                Integer key = entry.getKey();
+                Map<String, Integer> value = entry.getValue();
+
+                if (result.containsKey(key)) {
+                    result.put(key, mergeMap(Maps.newHashMap(result.get(key)), value));
+                } else {
+                    result.put(key, value);
+                }
+            }
+            return true;
+        }
+
+        /*public boolean merge(Map<Integer, Map<String , Integer>> other) {
             if (other == null) {
                 return true;
             }
@@ -54,6 +72,20 @@ public class NestedMapUDAFReduce extends UDAF {
                 });
             }
             return v1;
+        }*/
+
+        private Map<String, Integer> mergeMap(Map<String, Integer> map, Map<String, Integer> from) throws HiveException {
+            for(Map.Entry<String, Integer> entry : from.entrySet()) {
+                String key = entry.getKey();
+                Integer value = entry.getValue();
+                if (map.containsKey(key)) {
+                    Integer v = map.get(key);
+                    map.put(key, (value < v) ? value : v);
+                } else {
+                    map.put(key, value);
+                }
+            }
+            return map;
         }
 
         public Map<Integer, Map<String , Integer>> terminate(){
